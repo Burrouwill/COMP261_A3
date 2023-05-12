@@ -502,6 +502,8 @@ public class Controller {
         augmentationPaths = new ArrayList<Pair<ArrayList<String>, Integer>>();
         augmentationPaths = EdmondKarp.calcMaxflows(graph,startLocation,goalLocation);
         reportaugmentationPaths(augmentationPaths);
+        
+        EdmondKarp.computeResidualGraph(graph);
     }
 
     public void handlePageRank(ActionEvent event){
