@@ -32,12 +32,13 @@ import java.util.stream.*;
 
 public class EdmondKarp {
     // class members
+    private static final int INF = Integer.MAX_VALUE;
 
     //data structure to maintain a list of forward and reverse edges - forward edges stored at even indices and reverse edges stored at odd indices
     private static Map<String,Edge> edges = new HashMap<>(); 
 
     // Augmentation path and the corresponding flow
-    private static ArrayList<Pair<ArrayList<String>, Integer>> augmentationPathsAll = new ArrayList<Pair<ArrayList<String>, Integer>> ();
+    //private static ArrayList<Pair<ArrayList<String>, Integer>> augmentationPathsAll = new ArrayList<Pair<ArrayList<String>, Integer>> ();
 
     public static void computeResidualGraph(Graph graph){
         // Get original edges from the graph
@@ -108,6 +109,17 @@ public class EdmondKarp {
     }
 
     /**
+     * Udates the flow 
+     */
+    
+    public static void updateFlow(ArrayList<String> augPath, int pathFlow) {
+        for (String edgeId : augPath) {
+            Edge e = edges.get(edgeId);
+            e.setFlow(e.flow() + pathFlow);
+        }
+    }
+    
+    /**
      * Calculates the bottleneck of an augmentation path
      */
     public static int bottleneck(ArrayList<String> augPath){
@@ -126,84 +138,68 @@ public class EdmondKarp {
      * Find maximum flow
      */
     // TODO: Find augmentation paths and their corresponding flows
+
     public static ArrayList<Pair<ArrayList<String>, Integer>> calcMaxflows(Graph graph, City from, City to) {
-        // All edges have had flow set to 0 in method that constructs RG
-        // RG has forward  edges as well as residual edges 
-
-        // Set max flow to 0
+        ArrayList<Pair<ArrayList<String>, Integer>> augmentationPathsAll = new ArrayList<>();
         int maxFlow = 0;
-        // Pathflow holder == 0
-        int pathFlow = 0;
 
-        // Repeat this a number of times? While there are still augmentation paths to be found
-        for (int i = 0 ; i < 10 ; i++){
-        
-            // Find an augmentation path & Bottleneck of 0 ?
-            Pair<ArrayList<String>, Integer> pair = bfs(graph,from,to);
-            // Get the augpath
-            ArrayList<String> augPath = pair.getKey();
-            // Calculate the bottleneck using helper method if aug != null
-            if (augPath != null){
-                pathFlow = bottleneck(augPath);
+        while (true) {
+            Pair<ArrayList<String>, Integer> pair = bfs(graph, from, to);
+            if (pair == null || pair.getKey().isEmpty()) {
+                break; // No more augmentation paths found, exit loop
             }
 
-            // Set maxflow 
-            maxFlow = maxFlow + pathFlow;
-            //Output the augpath to the augmentationPathsAll field
-            augmentationPathsAll.add(new Pair<ArrayList<String>,Integer>(augPath,maxFlow));
-            // Update the flows / capacitys of the RG 
+            ArrayList<String> augPath = pair.getKey();
+            int pathFlow = pair.getValue();
+
+            maxFlow += pathFlow;
+            augmentationPathsAll.add(new Pair<>(new ArrayList<>(augPath), maxFlow));
+
+            updateFlow(augPath, pathFlow);
         }
 
-        return augmentationPathsAll; // Care with field 
+        return augmentationPathsAll;
     }
 
+    
+    
     /** 
      * ***** NAME HERE ****
      */
     // TODO:Use BFS to find a path from s to t along with the correponding bottleneck flow
-    public static Pair<ArrayList<String>, Integer>  bfs(Graph graph, City s, City t) {
 
-        ArrayList<String> augmentationPath = new ArrayList<>();
-        HashMap<String,String> backPointer = new HashMap<>(); // DOi need to add null entries? CityID -> Edge ID? 
+    public static Pair<ArrayList<String>, Integer> bfs(Graph graph, City s, City t) {
+        HashMap<String, String> backPointer = new HashMap<>();
         Queue<City> queue = new ArrayDeque<>();
-        // Offer queue start city
         queue.offer(s);
 
-        //While queue !empty
-        while (!queue.isEmpty()){
-            //Get current city from queue
+        while (!queue.isEmpty()) {
             City current = queue.poll();
-            // For each outward Edge of Current, Get the ID of the outward edge
-            for (String ID : current.getEdgeIds()){ 
-                // Get the edge aassociated with the ID from map of edges 
-                Edge e = edges.get(ID);
-                // If the next city from the edge is not the start & Is not already in the backpointers & capacity != 0
-                if (e.toCity() != s && backPointer.get(e.toCity()) == null && e.capacity() != 0){
-                    backPointer.put(e.toCity().getId(),getEdgeId(e));
-                    // If the sink city has an edge thats not null -> We found a path, need to build it
-                    if (backPointer.get(t) != null){
-                        // Set first edge to edge associateed with t
-                        Edge pathEdge = edges.get(backPointer.get(t.getId()));
-                        // While there is still edges on the path, add them to the aug path list
-                        while (pathEdge != null){
-                            // Add the edge id to aug path
-                            augmentationPath.add(getEdgeId(pathEdge));
-                            // Set path edge to next edge
-                            pathEdge = edges.get(backPointer.get(pathEdge.fromCity().getId()));
-                        }
-                        // Reverse the 
-                        Collections.reverse(augmentationPath);
+            for (String edgeId : current.getEdgeIds()) {
+                Edge e = edges.get(edgeId);
+                if (e.toCity() != s && backPointer.get(e.toCity().getId()) == null && e.capacity() > 0) {
+                    backPointer.put(e.toCity().getId(), edgeId);
+                    if (e.toCity() == t) {
+                        ArrayList<String> augmentationPath = new ArrayList<>();
+                        int bottleneck = Integer.MAX_VALUE;
+                        String cityId = t.getId();
 
-                        // Return augPath along with 0 pathflow 
-                        return new Pair<ArrayList<String>, Integer>(augmentationPath,0);
+                        while (backPointer.containsKey(cityId)) {
+                            String edge = backPointer.get(cityId);
+                            augmentationPath.add(edge);
+                            bottleneck = Math.min(bottleneck, edges.get(edge).capacity() - edges.get(edge).flow());
+                            cityId = edges.get(edge).fromCity().getId();
+                        }
+
+                        Collections.reverse(augmentationPath);
+                        return new Pair<>(augmentationPath, bottleneck);
                     }
                     queue.offer(e.toCity());
                 }
             }
         }
 
-        // END TODO
-        return new Pair(new ArrayList<String>(List.of("")),0); // Was (NULL,0)
+        return null;
     }
 
 }
