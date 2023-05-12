@@ -37,7 +37,7 @@ public class EdmondKarp {
     private static Map<String,Edge> edges = new HashMap<>(); 
 
     // Augmentation path and the corresponding flow
-    private static ArrayList<Pair<ArrayList<String>, Integer>> augmentationPaths =null;
+    private static ArrayList<Pair<ArrayList<String>, Integer>> augmentationPathsAll = new ArrayList<Pair<ArrayList<String>, Integer>> ();
 
     public static void computeResidualGraph(Graph graph){
         // Get original edges from the graph
@@ -45,6 +45,8 @@ public class EdmondKarp {
         // Add forward Edges to the map
         int edgeCount = 0;
         for (Edge e : forwardEdges){
+            // Set the flow to 0
+            e.setFlow(0); 
             edges.put(edgeCount+"",e);
             // Increment count for even numbers 
             edgeCount += 2;
@@ -105,16 +107,59 @@ public class EdmondKarp {
         .orElse(null);
     }
 
-    /** find maximum flow
-     * 
+    /**
+     * Calculates the bottleneck of an augmentation path
+     */
+    public static int bottleneck(ArrayList<String> augPath){
+        int lowestCap = Integer.MAX_VALUE;
+        for (String edgeId : augPath){
+            Edge e = edges.get(edgeId);
+            int edgeCap = e.capacity(); // Need to check if this is correct, should it be remaining capacity? or a different metric
+            if (edgeCap < lowestCap){
+                lowestCap = edgeCap;
+            }
+        }
+        return lowestCap;
+    }
+
+    /** 
+     * Find maximum flow
      */
     // TODO: Find augmentation paths and their corresponding flows
     public static ArrayList<Pair<ArrayList<String>, Integer>> calcMaxflows(Graph graph, City from, City to) {
+        // All edges have had flow set to 0 in method that constructs RG
+        // RG has forward  edges as well as residual edges 
 
-        // END TODO
-        return augmentationPaths;
+        // Set max flow to 0
+        int maxFlow = 0;
+        // Pathflow holder == 0
+        int pathFlow = 0;
+
+        // Repeat this a number of times? While there are still augmentation paths to be found
+        for (int i = 0 ; i < 10 ; i++){
+        
+            // Find an augmentation path & Bottleneck of 0 ?
+            Pair<ArrayList<String>, Integer> pair = bfs(graph,from,to);
+            // Get the augpath
+            ArrayList<String> augPath = pair.getKey();
+            // Calculate the bottleneck using helper method if aug != null
+            if (augPath != null){
+                pathFlow = bottleneck(augPath);
+            }
+
+            // Set maxflow 
+            maxFlow = maxFlow + pathFlow;
+            //Output the augpath to the augmentationPathsAll field
+            augmentationPathsAll.add(new Pair<ArrayList<String>,Integer>(augPath,maxFlow));
+            // Update the flows / capacitys of the RG 
+        }
+
+        return augmentationPathsAll; // Care with field 
     }
 
+    /** 
+     * ***** NAME HERE ****
+     */
     // TODO:Use BFS to find a path from s to t along with the correponding bottleneck flow
     public static Pair<ArrayList<String>, Integer>  bfs(Graph graph, City s, City t) {
 
@@ -147,17 +192,18 @@ public class EdmondKarp {
                             pathEdge = edges.get(backPointer.get(pathEdge.fromCity().getId()));
                         }
                         // Reverse the 
-                        Collections.reverse(augmentationPaths);
-                        return augmentationPaths;
+                        Collections.reverse(augmentationPath);
+
+                        // Return augPath along with 0 pathflow 
+                        return new Pair<ArrayList<String>, Integer>(augmentationPath,0);
                     }
                     queue.offer(e.toCity());
                 }
             }
-
         }
 
         // END TODO
-        return new Pair(null,0);
+        return new Pair(new ArrayList<String>(List.of("")),0); // Was (NULL,0)
     }
 
 }
