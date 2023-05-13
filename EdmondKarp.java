@@ -48,7 +48,11 @@ public class EdmondKarp {
         for (Edge e : forwardEdges){
             // Set the flow to 0
             e.setFlow(0); 
+            // Put edge in edges map
             edges.put(edgeCount+"",e);
+            // Add edge to edgeIds collections in both the from & to city
+            e.fromCity().addEdgeId(edgeCount+"");
+            e.toCity().addEdgeId(edgeCount+"");
             // Increment count for even numbers 
             edgeCount += 2;
         }
@@ -61,10 +65,13 @@ public class EdmondKarp {
             // New Edge
             Edge reverseEdge =  new Edge(toCity,fromCity,e.transpType(),0,0);
             edges.put(edgeCount+"", reverseEdge);
+            // Add edge to edgeIds collections in both the from & to city
+            e.fromCity().addEdgeId(edgeCount+"");
+            e.toCity().addEdgeId(edgeCount+"");
             // Increment Edge ID
             edgeCount+=2;
         }
-        printResidualGraphData(graph);  //may help in debugging
+        //printResidualGraphData(graph);  //may help in debugging
     }
 
     // Method to print Residual Graph 
@@ -101,11 +108,14 @@ public class EdmondKarp {
      * Returns the ID of a given edge
      */
     public static String getEdgeId(Edge goal) {
-        return edges.entrySet().stream()
+        String id = edges.entrySet().stream()
         .filter(e -> e.getValue() == goal)
         .map(Map.Entry::getKey)
         .findFirst()
         .orElse(null);
+        
+        System.out.println(id);
+        return id;
     }
 
     /**
@@ -141,10 +151,17 @@ public class EdmondKarp {
 
     public static ArrayList<Pair<ArrayList<String>, Integer>> calcMaxflows(Graph graph, City from, City to) {
         ArrayList<Pair<ArrayList<String>, Integer>> augmentationPathsAll = new ArrayList<>();
+        
         int maxFlow = 0;
-
+        
+        // Create RG
+        computeResidualGraph(graph);
+        
+        System.out.println(from.getEdgeIds());
+        
         while (true) {
             Pair<ArrayList<String>, Integer> pair = bfs(graph, from, to);
+            
             if (pair == null || pair.getKey().isEmpty()) {
                 break; // No more augmentation paths found, exit loop
             }
@@ -153,6 +170,7 @@ public class EdmondKarp {
             int pathFlow = pair.getValue();
 
             maxFlow += pathFlow;
+    
             augmentationPathsAll.add(new Pair<>(new ArrayList<>(augPath), maxFlow));
 
             updateFlow(augPath, pathFlow);
@@ -177,20 +195,18 @@ public class EdmondKarp {
             City current = queue.poll();
             for (String edgeId : current.getEdgeIds()) {
                 Edge e = edges.get(edgeId);
-                if (e.toCity() != s && backPointer.get(e.toCity().getId()) == null && e.capacity() > 0) {
+                if (!(e.toCity().equals(s)) && backPointer.get(e.toCity().getId()) == null && e.capacity()-e.flow() > 0) {
                     backPointer.put(e.toCity().getId(), edgeId);
-                    if (e.toCity() == t) {
+                    if (e.toCity().equals(t)) {
                         ArrayList<String> augmentationPath = new ArrayList<>();
                         int bottleneck = Integer.MAX_VALUE;
                         String cityId = t.getId();
-
                         while (backPointer.containsKey(cityId)) {
                             String edge = backPointer.get(cityId);
                             augmentationPath.add(edge);
                             bottleneck = Math.min(bottleneck, edges.get(edge).capacity() - edges.get(edge).flow());
                             cityId = edges.get(edge).fromCity().getId();
                         }
-
                         Collections.reverse(augmentationPath);
                         return new Pair<>(augmentationPath, bottleneck);
                     }
@@ -198,9 +214,7 @@ public class EdmondKarp {
                 }
             }
         }
-
         return null;
     }
-
 }
 
