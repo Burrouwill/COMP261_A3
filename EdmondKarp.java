@@ -108,89 +108,73 @@ public class EdmondKarp {
      * Returns the ID of a given edge
      */
     public static String getEdgeId(Edge goal) {
-        String id = edges.entrySet().stream()
+        return edges.entrySet().stream()
         .filter(e -> e.getValue() == goal)
         .map(Map.Entry::getKey)
         .findFirst()
         .orElse(null);
-        
-        System.out.println(id);
-        return id;
     }
 
     /**
-     * Udates the flow 
+     * Udates the flow to reflect bottleneck value.
      */
-    
-    public static void updateFlow(ArrayList<String> augPath, int pathFlow) {
+
+    public static void updateFlow(ArrayList<String> augPath, int bottleneck) {
         for (String edgeId : augPath) {
             Edge e = edges.get(edgeId);
-            e.setFlow(e.flow() + pathFlow);
+            e.setFlow(e.flow() + bottleneck);
         }
     }
-    
+
     /**
      * Calculates the bottleneck of an augmentation path
      */
-    public static int bottleneck(ArrayList<String> augPath){
+    public static int bottleneck(ArrayList<String> augPath) {
         int lowestCap = Integer.MAX_VALUE;
-        for (String edgeId : augPath){
+        for (String edgeId : augPath) {
             Edge e = edges.get(edgeId);
-            int edgeCap = e.capacity(); // Need to check if this is correct, should it be remaining capacity? or a different metric
-            if (edgeCap < lowestCap){
-                lowestCap = edgeCap;
+            // Calculate remaining capacity
+            int remainingCap = e.capacity() - e.flow();
+            if (remainingCap < lowestCap) {
+                lowestCap = remainingCap;
             }
         }
         return lowestCap;
     }
 
     /** 
-     * Find maximum flow
+     * Finds maximum flow through a graph from start city to sink city. 
      */
-    // TODO: Find augmentation paths and their corresponding flows
-
     public static ArrayList<Pair<ArrayList<String>, Integer>> calcMaxflows(Graph graph, City from, City to) {
+        // Data structure to hold all of the Augmentation Paths
         ArrayList<Pair<ArrayList<String>, Integer>> augmentationPathsAll = new ArrayList<>();
-        
-        int maxFlow = 0;
-        
         // Create RG
         computeResidualGraph(graph);
-        
-        System.out.println(from.getEdgeIds());
-        
+        // While there are more augmentation paths:
         while (true) {
+            // Find an augmentation path using the bfs
             Pair<ArrayList<String>, Integer> pair = bfs(graph, from, to);
-            
+            // If the path lsit == null --> No more paths left, exit the loop 
             if (pair == null || pair.getKey().isEmpty()) {
                 break; // No more augmentation paths found, exit loop
             }
-
-            ArrayList<String> augPath = pair.getKey();
-            int pathFlow = pair.getValue();
-
-            maxFlow += pathFlow;
-    
-            augmentationPathsAll.add(new Pair<>(new ArrayList<>(augPath), maxFlow));
-
-            updateFlow(augPath, pathFlow);
+            // If path was not null --> Add it to the list of augmentation paths
+            augmentationPathsAll.add(pair);
+            // Update the flows of the edges along the path 
+            updateFlow(pair.getKey(), pair.getValue());
         }
-
         return augmentationPathsAll;
     }
 
     
-    
     /** 
-     * ***** NAME HERE ****
+     * Runs a BFS on the graph from start city (s) --> sink city (t). 
+     * Returns an augmentation path along with the bottle neck value for the path.
      */
-    // TODO:Use BFS to find a path from s to t along with the correponding bottleneck flow
-
     public static Pair<ArrayList<String>, Integer> bfs(Graph graph, City s, City t) {
         HashMap<String, String> backPointer = new HashMap<>();
         Queue<City> queue = new ArrayDeque<>();
         queue.offer(s);
-
         while (!queue.isEmpty()) {
             City current = queue.poll();
             for (String edgeId : current.getEdgeIds()) {
@@ -199,15 +183,18 @@ public class EdmondKarp {
                     backPointer.put(e.toCity().getId(), edgeId);
                     if (e.toCity().equals(t)) {
                         ArrayList<String> augmentationPath = new ArrayList<>();
-                        int bottleneck = Integer.MAX_VALUE;
+                        
+                        //String edge = "";
                         String cityId = t.getId();
                         while (backPointer.containsKey(cityId)) {
                             String edge = backPointer.get(cityId);
                             augmentationPath.add(edge);
-                            bottleneck = Math.min(bottleneck, edges.get(edge).capacity() - edges.get(edge).flow());
                             cityId = edges.get(edge).fromCity().getId();
                         }
                         Collections.reverse(augmentationPath);
+
+                        int bottleneck = bottleneck(augmentationPath);
+
                         return new Pair<>(augmentationPath, bottleneck);
                     }
                     queue.offer(e.toCity());
