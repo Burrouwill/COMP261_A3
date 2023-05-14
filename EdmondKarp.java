@@ -31,14 +31,8 @@ import java.util.stream.*;
  */
 
 public class EdmondKarp {
-    // class members
-    private static final int INF = Integer.MAX_VALUE;
-
     //data structure to maintain a list of forward and reverse edges - forward edges stored at even indices and reverse edges stored at odd indices
     private static Map<String,Edge> edges = new HashMap<>(); 
-
-    // Augmentation path and the corresponding flow
-    //private static ArrayList<Pair<ArrayList<String>, Integer>> augmentationPathsAll = new ArrayList<Pair<ArrayList<String>, Integer>> ();
 
     public static void computeResidualGraph(Graph graph){
         // Get original edges from the graph
