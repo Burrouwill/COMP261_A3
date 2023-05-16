@@ -3,6 +3,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Collection;
 
 /**
  * Write a description of class PageRank here.
@@ -10,20 +12,26 @@ import java.util.HashMap;
  * @author (your name)
  * @version (a version number or a date)
  */
-public class PageRank
-{
+public class PageRank{
     //class members 
     private static double dampingFactor = .85;
     private static int iter = 10;
+
+    // Map of PageRank : City 
+    private static Map<City,Double> cities = new HashMap<>();
     /**
      * build the fromLinks and toLinks 
      */
-    //TODO: Build the data structure to support Page rank. For each edge in the graph add the corresponding cities to the fromLinks and toLinks
     public static void computeLinks(Graph graph){
-        // TODO
+        // Add all cities in the graph to map of City : Page rank key:value pairs
+        graph.getCities().values().stream().forEach(c -> cities.put(c, 0.0));
 
+        // Add the to/from edges to each city
+        for (Edge e : graph.getOriginalEdges()){
+            e.fromCity().addToLinks(e.toCity());
+            e.toCity().addFromLinks(e.fromCity());
+        }
         //printPageRankGraphData(graph);  ////may help in debugging
-        // END TODO
     }
 
     public static void printPageRankGraphData(Graph graph){
@@ -48,12 +56,15 @@ public class PageRank
         }    
         System.out.println("=================");
     }
-    //TODO: Compute rank of all nodes in the network and display them at the console
+    
     public static void computePageRank(Graph graph){
-        // TODO
+        // TODO WHAT DO I DO WITH THE RANKED PAGES? 
+        // No field in city for storing page rank? Do I use a ma p or something similar in PageRank class? 
+        // Do I print it from this method? Where does it go? 
 
         
-        // END TODO
-
+        
+        
+        
     }
 }
