@@ -16,6 +16,7 @@ public class PageRank{
     //class members 
     private static double dampingFactor = .85;
     private static int iter = 10;
+    private static double noOfCities;
 
     // Map of PageRank : City 
     private static Map<City,Double> cities = new HashMap<>();
@@ -23,15 +24,18 @@ public class PageRank{
      * build the fromLinks and toLinks 
      */
     public static void computeLinks(Graph graph){
+        // Calculate intitial PageRank value
+        noOfCities = graph.getCities().size();
+
         // Add all cities in the graph to map of City : Page rank key:value pairs
-        graph.getCities().values().stream().forEach(c -> cities.put(c, 0.0));
+        graph.getCities().values().stream().forEach(c -> cities.put(c, noOfCities));
 
         // Add the to/from edges to each city
         for (Edge e : graph.getOriginalEdges()){
             e.fromCity().addToLinks(e.toCity());
             e.toCity().addFromLinks(e.fromCity());
         }
-        //printPageRankGraphData(graph);  ////may help in debugging
+        printPageRankGraphData(graph);  ////may help in debugging
     }
 
     public static void printPageRankGraphData(Graph graph){
@@ -56,15 +60,29 @@ public class PageRank{
         }    
         System.out.println("=================");
     }
-    
-    public static void computePageRank(Graph graph){
-        // TODO WHAT DO I DO WITH THE RANKED PAGES? 
-        // No field in city for storing page rank? Do I use a ma p or something similar in PageRank class? 
-        // Do I print it from this method? Where does it go? 
 
-        
-        
-        
-        
+    public static void computePageRank(Graph graph){
+        // Set count to 0
+        int count = 1;
+        Map<City, Double> newRankValues = new HashMap<>();
+
+        while (count <= iter) {
+            for (City c : cities.keySet()) {
+                double cRank = 0;
+                for (City n : c.getFromLinks()) {
+                    double neighbourShare = cities.get(n) / n.getToLinks().size();
+                    cRank += neighbourShare;
+                }
+                cRank = ((1 - dampingFactor) / noOfCities) + dampingFactor * cRank;
+
+                newRankValues.put(c, cRank);
+            }
+
+            cities.putAll(newRankValues);
+            newRankValues.clear();
+            count++;
+        }
+
+        System.out.println(cities);
     }
 }
