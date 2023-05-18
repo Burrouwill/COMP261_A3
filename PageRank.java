@@ -14,7 +14,7 @@ import java.util.Collection;
  */
 public class PageRank{
     //class members 
-    private static double dampingFactor = .85;
+    private static double dampingFactor = 0.85;
     private static int iter = 10;
     private static double noOfCities;
 
@@ -28,7 +28,7 @@ public class PageRank{
         noOfCities = graph.getCities().size();
 
         // Add all cities in the graph to map of City : Page rank key:value pairs
-        graph.getCities().values().stream().forEach(c -> cities.put(c, noOfCities));
+        graph.getCities().values().stream().forEach(c -> cities.put(c, 1.0 / noOfCities));
 
         // Add the to/from edges to each city
         for (Edge e : graph.getOriginalEdges()){
@@ -61,28 +61,37 @@ public class PageRank{
         System.out.println("=================");
     }
 
-    public static void computePageRank(Graph graph){
-        // Set count to 0
-        int count = 1;
+   public static void computePageRank(Graph graph) {
+    Map<City, Double> rankValues = new HashMap<>();
+
+    // Initialize the PageRank values to 0.2 for each node
+    graph.getCities().values().forEach(c -> rankValues.put(c, 0.2));
+
+    int count = 1;
+    while (count <= iter) {
         Map<City, Double> newRankValues = new HashMap<>();
 
-        while (count <= iter) {
-            for (City c : cities.keySet()) {
-                double cRank = 0;
-                for (City n : c.getFromLinks()) {
-                    double neighbourShare = cities.get(n) / n.getToLinks().size();
-                    cRank += neighbourShare;
-                }
-                cRank = ((1 - dampingFactor) / noOfCities) + dampingFactor * cRank;
+        for (City n : graph.getCities().values()) {
+            double nRank = (1 - dampingFactor) / noOfCities;
 
-                newRankValues.put(c, cRank);
+            for (City b : n.getFromLinks()) {
+                double neighbourShare = rankValues.get(b) / b.getToLinks().size();
+                nRank += dampingFactor * neighbourShare;
             }
 
-            cities.putAll(newRankValues);
-            newRankValues.clear();
-            count++;
+            newRankValues.put(n, nRank);
         }
 
-        System.out.println(cities);
+        rankValues.putAll(newRankValues);
+        count++;
     }
+
+    // Normalize the PageRank values to sum up to 1
+    double sum = rankValues.values().stream().mapToDouble(Double::doubleValue).sum();
+    rankValues.replaceAll((k, v) -> v / sum);
+
+    System.out.println(rankValues);
+}
+
+
 }
