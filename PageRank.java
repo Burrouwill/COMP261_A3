@@ -75,8 +75,8 @@ public class PageRank{
             double nRank = (1 - dampingFactor) / noOfCities;
 
             for (City b : n.getFromLinks()) {
-                double neighbourShare = rankValues.get(b) / b.getToLinks().size();
-                nRank += dampingFactor * neighbourShare;
+                double neighborShare = rankValues.get(b) / b.getToLinks().size();
+                nRank += dampingFactor * neighborShare;
             }
 
             newRankValues.put(n, nRank);
@@ -86,11 +86,13 @@ public class PageRank{
         count++;
     }
 
-    // Normalize the PageRank values to sum up to 1
-    double sum = rankValues.values().stream().mapToDouble(Double::doubleValue).sum();
-    rankValues.replaceAll((k, v) -> v / sum);
-
-    System.out.println(rankValues);
+    
+    for (double d : rankValues.values()){
+        System.out.println(d*5);
+        // Off by factor of 5, why is this the case? 
+    }
+    //System.out.println(rankValues);
+    // O
 }
 
 
