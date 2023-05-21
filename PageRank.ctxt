@@ -1,6 +1,6 @@
 #BlueJ class context
 comment0.target=PageRank
-comment0.text=\r\n\ Write\ a\ description\ of\ class\ PageRank\ here.\r\n\r\n\ @author\ (your\ name)\r\n\ @version\ (a\ version\ number\ or\ a\ date)\r\n
+comment0.text=\r\n\ Implements\ PageRank\ algorithm.\r\n\ \r\n\ compueLinks(Graph\ graph)\ generates\ forward\ /\ backward\ cities\ for\ each\ city\ from\ the\ edge\ information\ acquired\ from\ graph\ that\ it\ as\ passed\ as\ arg.\r\n\ \r\n\ printPageRankGraphData(Graph\ graph)\ print\ helper\ method.\r\n\ \r\n\ computePageRank(Graph\ graph)\ Computes\ the\ PageRank\ values\ for\ each\ city\ in\ the\ graph\ using\ the\ PageRank\ algorithm.\ Runs\ n\ iterations\ set\ by\ iter\ field\ using\ the\ standard\ dampingFactor\ of\ 0.85.\r\n\ \r\n\ @author\ (wgrbu)\r\n\ @version\ (Final\ 22/05/23)\r\n
 comment1.params=graph
 comment1.target=void\ computeLinks(Graph)
 comment1.text=\r\n\ build\ the\ fromLinks\ and\ toLinks\ \r\n

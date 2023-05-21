@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * Implements PageRank algorithm.
@@ -86,6 +87,11 @@ public class PageRank{
             count++;
         }
         // Print the rankValues to console
-        System.out.println(rankValues);
+        System.out.println("PageRank Values:");
+        List<City> sortedKeys = new ArrayList<>(rankValues.keySet());
+        java.util.Collections.sort(sortedKeys); 
+        for (City key : sortedKeys) {
+            System.out.println(key + " = " + rankValues.get(key));
+        }
     }
 }
