@@ -14,20 +14,8 @@ import javafx.util.Pair;
 import java.util.List;
 import java.util.stream.*;
 
-/** Edmond karp algorithm to find augmentation paths and network flow.
- * 
- * This would include building the supporting data structures:
- * 
- * a) Building the residual graph(that includes original and backward (reverse) edges.)
- *     - maintain a map of Edges where for every edge in the original graph we add a reverse edge in the residual graph.
- *     - The map of edges are set to include original edges at even indices and reverse edges at odd indices (this helps accessing the corresponding backward edge easily)
- *     
- *     
- * b) Using this residual graph, for each city maintain a list of edges out of the city (this helps accessing the neighbours of a node (both original and reverse))
-
- * The class finds : augmentation paths, their corresponing flows and the total flow
- * 
- * 
+/** 
+ * Implementation of Edmonds-Karp algorithm to find augmentation paths and network flow. 
  */
 
 public class EdmondKarp {
@@ -160,25 +148,32 @@ public class EdmondKarp {
         return augmentationPathsAll;
     }
 
-    
     /** 
      * Runs a BFS on the graph from start city (s) --> sink city (t). 
-     * Returns an augmentation path along with the bottle neck value for the path.
+     * Returns an augmentation path along with the bottleneck value for the path.
      */
     public static Pair<ArrayList<String>, Integer> bfs(Graph graph, City s, City t) {
+        // HashMap to store the back pointers from each city to the edge that leads to it
         HashMap<String, String> backPointer = new HashMap<>();
+        // Queue to perform BFS traversal of the graph
         Queue<City> queue = new ArrayDeque<>();
+        // Enqueue the start city
         queue.offer(s);
         while (!queue.isEmpty()) {
+            // Dequeue the current city
             City current = queue.poll();
+            // Iterate over the outgoing edges from the current city
             for (String edgeId : current.getEdgeIds()) {
+                // Get the outgoing edge
                 Edge e = edges.get(edgeId);
-                if (!(e.toCity().equals(s)) && backPointer.get(e.toCity().getId()) == null && e.capacity()-e.flow() > 0) {
+                // Check if the destination city is not the start city, the edge is available for flow, and the destination city has not been visited yet
+                if (!(e.toCity().equals(s)) && backPointer.get(e.toCity().getId()) == null && e.capacity() - e.flow() > 0) {
+                    // Store the back pointer from the destination city to the current edge
                     backPointer.put(e.toCity().getId(), edgeId);
+                    // If the destination city is the sink city (t), construct the augmentation path
                     if (e.toCity().equals(t)) {
                         ArrayList<String> augmentationPath = new ArrayList<>();
-                        
-                        //String edge = "";
+                        // Traverse the back pointers to construct the augmentation path
                         String cityId = t.getId();
                         while (backPointer.containsKey(cityId)) {
                             String edge = backPointer.get(cityId);
@@ -186,15 +181,17 @@ public class EdmondKarp {
                             cityId = edges.get(edge).fromCity().getId();
                         }
                         Collections.reverse(augmentationPath);
-
+                        // Calculate the bottleneck value for the augmentation path
                         int bottleneck = bottleneck(augmentationPath);
-
+                        // Return the augmentation path and the bottleneck value
                         return new Pair<>(augmentationPath, bottleneck);
                     }
+                    // Add the the destination city for further exploration
                     queue.offer(e.toCity());
                 }
             }
         }
+        // If no augmentation path is found, return null
         return null;
     }
 }
